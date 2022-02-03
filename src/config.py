@@ -12,8 +12,6 @@ EXCLUDES = (
     # Error in the provider
     # https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-amplify/issues/14
     "AWS::Amplify::App",
-    # https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-athena/issues/36
-    "AWS::Athena::DataCatalog",
     # https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-cloudformation/issues/82
     "AWS::CloudFormation::ModuleDefaultVersion",
     # https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-cloudformation/issues/82
@@ -75,6 +73,7 @@ EXCLUDES = (
 )
 
 EXCLUDES_GET = {
+    "AWS::Athena::DataCatalog",  # ResourceNotFoundException - same problem with cli
     "AWS::EC2::PrefixList",  # InternalFailure on GetResource
     "AWS::ECS::CapacityProvider",  # InternalFailure on GetResource
     "AWS::ImageBuilder::Image",  # ResourceNotFoundException
