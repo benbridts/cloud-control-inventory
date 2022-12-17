@@ -1,7 +1,6 @@
 import datetime
 import json
 import pathlib
-from os import path, environ
 from typing import List, Set, Optional, Mapping
 
 import boto3
@@ -25,13 +24,11 @@ cfn = boto_session.client("cloudformation", config=boto_config)
 cc = boto_session.client("cloudcontrol", config=boto_config)
 
 
-def main(resource_types: Optional[List] = None, starts_with=None, continue_from=None):
+def main(resource_types: Optional[List] = None, starts_with=None):
     if resource_types is None:
         resource_types = list_all_resource_types()
     if starts_with:
         resource_types = [x for x in resource_types if x.startswith(starts_with)]
-    if continue_from:
-        resource_types = [x for x in resource_types if x > continue_from]
 
     graph = DependencyGraph(dependencies=DEPENDENCIES)
     graph.add_resources(resource_types)

@@ -21,6 +21,10 @@ EXCLUDES = (
     "AWS::MediaTailor::PlaybackConfiguration",  # security token
     "AWS::Pipes::Pipe",  # security token
     "AWS::RolesAnywhere::TrustAnchor",  # security token
+    "AWS::SageMaker::DataQualityJobDefinition",  # security token
+    "AWS::SageMaker::ModelBiasJobDefinition",  # security token
+    "AWS::SageMaker::ModelExplainabilityJobDefinition",  # security token
+    "AWS::SageMaker::ModelQualityJobDefinition",  # security token
     # Blocked by AWS::ApiGateway::RestApi not supporting List
     "AWS::ApiGateway::Authorizer",
     "AWS::ApiGateway::BasePathMapping",
@@ -170,6 +174,9 @@ DEPENDENCIES = {  # Our implementation only supports one parent_resource as depe
     "AWS::IoTTwinMaker::Scene": Dependency(
         parent="AWS::IoTTwinMaker::Workspace", mapping={"WorkspaceId": "WorkspaceId"}
     ),
+    "AWS::IoTTwinMaker::SyncJob": Dependency(
+        parent="AWS::IoTTwinMaker::Workspace", mapping={"WorkspaceId": "WorkspaceId"}
+    ),
     # IotSiteWise
     "AWS::IoTSiteWise::AccessPolicy": Dependency(
         parent="AWS::IoTSiteWise::Project", mapping={"AccessPolicyResource.Project.Id": "ProjectId"}
@@ -192,6 +199,9 @@ DEPENDENCIES = {  # Our implementation only supports one parent_resource as depe
     "AWS::Location::TrackerConsumer": Dependency(
         parent="AWS::Location::Tracker", mapping={"TrackerName": "TrackerName"}
     ),
+    # Logs
+    "AWS::Logs::LogStream": Dependency(parent="AWS::Logs::LogGroup", mapping={"LogGroupName": "LogGroupName"}),
+    "AWS::Logs::SubscriptionFilter": Dependency(parent="AWS::Logs::LogGroup", mapping={"LogGroupName": "LogGroupName"}),
     # MediaConnect
     "AWS::MediaConnect::FlowEntitlement": Dependency(parent="AWS::MediaConnect::Flow", mapping={"FlowArn": "FlowArn"}),
     "AWS::MediaConnect::FlowOutput": Dependency(parent="AWS::MediaConnect::Flow", mapping={"FlowArn": "FlowArn"}),
