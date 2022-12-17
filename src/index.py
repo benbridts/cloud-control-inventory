@@ -11,7 +11,6 @@ from botocore.config import Config as BotoConfig
 from config import EXCLUDES, EXCLUDES_GET, DEPENDENCIES
 from dependency_utils import DependencyGraph, DynamicDependency, ResourceDependency, CheckEnabledDependency
 
-environ["AWS_DATA_PATH"] = path.dirname(__file__) + path.sep + "botocore_data" + path.sep
 boto_config = BotoConfig(retries={"max_attempts": 4, "mode": "adaptive"})
 boto_session = boto3.Session()
 cfn = boto_session.client("cloudformation", config=boto_config)
