@@ -17,6 +17,8 @@ from dependency_utils import (
     CheckEnabledDependency,
 )
 
+ENABLE_GET = True
+
 boto_config = BotoConfig(retries={"max_attempts": 4, "mode": "adaptive"})
 boto_session = boto3.Session()
 cfn = boto_session.client("cloudformation", config=boto_config)
@@ -67,7 +69,7 @@ def list_all_resource_types() -> Set[str]:
 
 
 def list_resources_for_type(resource_type: str, resource_model: Optional[Mapping] = None) -> List:
-    should_perform_get = resource_type not in EXCLUDES_GET  # always do at least one get
+    should_perform_get = ENABLE_GET and (resource_type not in EXCLUDES_GET)  # do at least one get if enabled
     kwargs = {}
     if resource_model:
         kwargs["ResourceModel"] = json.dumps(resource_model)
