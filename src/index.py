@@ -9,7 +9,13 @@ import jmespath
 from botocore.config import Config as BotoConfig
 
 from config import EXCLUDES, EXCLUDES_GET, DEPENDENCIES
-from dependency_utils import DependencyGraph, DynamicDependency, ResourceDependency, CheckEnabledDependency
+from dependency_utils import (
+    DependencyGraph,
+    DynamicDependency,
+    StaticDependency,
+    ResourceDependency,
+    CheckEnabledDependency,
+)
 
 boto_config = BotoConfig(retries={"max_attempts": 4, "mode": "adaptive"})
 boto_session = boto3.Session()
@@ -17,9 +23,14 @@ cfn = boto_session.client("cloudformation", config=boto_config)
 cc = boto_session.client("cloudcontrol", config=boto_config)
 
 
-def main(resource_types: Optional[List] = None):
+def main(resource_types: Optional[List] = None, starts_with=None, continue_from=None):
     if resource_types is None:
         resource_types = list_all_resource_types()
+    if starts_with:
+        resource_types = [x for x in resource_types if x.startswith(starts_with)]
+    if continue_from:
+        resource_types = [x for x in resource_types if x > continue_from]
+
     graph = DependencyGraph(dependencies=DEPENDENCIES)
     graph.add_resources(resource_types)
     graph.load_dependencies()
@@ -149,6 +160,8 @@ def __get_resources(resource_type, known_resources) -> Optional[List]:
         parent_resources = known_resources[parent_type]
     elif isinstance(dependency, DynamicDependency):
         parent_resources = dependency.function(session=boto_session)
+    elif isinstance(dependency, StaticDependency):
+        parent_resources = dependency.items
     else:
         raise NotImplementedError("Unknown dependency type")
 
@@ -164,23 +177,7 @@ def __get_resources(resource_type, known_resources) -> Optional[List]:
 if __name__ == "__main__":
     start = datetime.datetime.utcnow()
     print(start.isoformat(" "))
-    main()
-    # main(
-    #     [
-    #         "AWS::WAFv2::IPSet",
-    #         "AWS::WAFv2::RegexPatternSet",
-    #         "AWS::WAFv2::RuleGroup",
-    #         "AWS::WAFv2::WebACL",
-    #         "AWS::QuickSight::Analysis",  # Required property: [AwsAccountId]
-    #         "AWS::QuickSight::Dashboard",  # Required property: [AwsAccountId]
-    #         "AWS::QuickSight::DataSet",  # Required property: [AwsAccountId]
-    #         "AWS::QuickSight::DataSource",  # Required property: [AwsAccountId]
-    #         "AWS::QuickSight::Template",  # Required property: [AwsAccountId]
-    #         "AWS::QuickSight::Theme",  # Required property: [AwsAccountId]
-    #         "AWS::AuditManager::Assessment",
-    #         "AWS::CloudFormation::Publisher",
-    #     ]
-    # )
+    main(starts_with="AWS::")
     stop = datetime.datetime.utcnow()
     print(stop.isoformat(" "))
     print(stop - start)

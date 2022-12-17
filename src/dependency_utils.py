@@ -9,7 +9,7 @@ import networkx as nx
 @dataclasses.dataclass
 class ResourceDependency:
     parent: str
-    mapping: dict[str, str]
+    mapping: dict[str, str]  # {resource_property: parent_property}
 
     def get_parent_property(self, resource_property):
         return self.mapping[resource_property]
@@ -19,6 +19,20 @@ class ResourceDependency:
 class DynamicDependency:
     function: Callable
     mapping: dict[str, str]
+
+
+@dataclasses.dataclass
+class StaticDependency:
+    options: Iterable
+    mapping_key: str
+
+    @property
+    def items(self) -> Iterable:
+        return [{"Properties": {"Value": x}} for x in self.options]
+
+    @property
+    def mapping(self) -> Mapping:
+        return {self.mapping_key: "Value"}
 
 
 @dataclasses.dataclass

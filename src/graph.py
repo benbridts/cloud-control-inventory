@@ -22,15 +22,3 @@ class DependencyGraph(object):
         yield from_resource
         for resource in list(self._graph.successors(from_resource)):
             yield from self.recurse(resource)
-
-
-def main():
-    graph = DependencyGraph()
-    graph.add_resources(["AWS::Athena::PreparedStatement", "AWS::Athena::WorkGroup"])
-    graph.add_dependency("AWS::Athena::PreparedStatement", "AWS::Athena::WorkGroup")
-    for x in graph.recurse("AWS::Athena::PreparedStatement"):
-        print(x)
-
-
-if __name__ == "__main__":
-    main()
