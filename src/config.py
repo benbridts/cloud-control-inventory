@@ -12,30 +12,21 @@ from dependency_utils import (
 EXCLUDES = (
     # Error in the provider
     # https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-cloudformation/issues/82
+    "AWS::AppSync::DomainName",  # security token
+    "AWS::Chatbot::MicrosoftTeamsChannelConfiguration",  # security token
     "AWS::CloudFormation::HookVersion",  # security token
     "AWS::CodeGuruReviewer::RepositoryAssociation",  # security token
-    "AWS::Backup::BackupPlan",  # security token
-    "AWS::Backup::BackupVault",  # security token
-    "AWS::Backup::BackupSelection",  # security token
     "AWS::Evidently::Segment",  # security token
     "AWS::MediaTailor::PlaybackConfiguration",  # security token
     "AWS::Pipes::Pipe",  # security token
     "AWS::RolesAnywhere::TrustAnchor",  # security token
+    "AWS::Route53Resolver::FirewallDomainList",  # security token
+    "AWS::Route53Resolver::FirewallRuleGroup",  # security token
+    "AWS::Route53Resolver::FirewallRuleGroupAssociation",  # security token
     "AWS::SageMaker::DataQualityJobDefinition",  # security token
     "AWS::SageMaker::ModelBiasJobDefinition",  # security token
     "AWS::SageMaker::ModelExplainabilityJobDefinition",  # security token
     "AWS::SageMaker::ModelQualityJobDefinition",  # security token
-    # Blocked by AWS::ApiGateway::RestApi not supporting List
-    "AWS::ApiGateway::Authorizer",
-    "AWS::ApiGateway::BasePathMapping",
-    "AWS::ApiGateway::Deployment",
-    "AWS::ApiGateway::DocumentationPart",
-    "AWS::ApiGateway::DocumentationVersion",
-    "AWS::ApiGateway::Model",
-    "AWS::ApiGateway::RequestValidator",
-    "AWS::ApiGateway::Resource",
-    "AWS::ApiGateway::Stage",
-    "AWS::ApiGateway::UsagePlanKey",
     # Blocked by AWS::AutoScaling::AutoScalingGroup not supporting List
     "AWS::AutoScaling::LifecycleHook",
     # Blocked by there not being an CloudControl Resource for Types
@@ -50,13 +41,15 @@ EXCLUDES = (
     # Blocked by AWS::Transfer::Server not supporting list
     "AWS::Transfer::Agreement",
     # other
+    "AWS::ApiGatewayV2::Route",  # Property at /properties/RouteId is null
+    "AWS::AppFlow::Connector",  # Connector with label S3 not found"
     "AWS::Budgets::BudgetsAction",  # Maybe AccessDenied from linked accounts
     "AWS::CE::CostCategory",  # Maybe AccessDenied from linked accounts
-    "AWS::CodePipeline::CustomActionType",  # ResourceNotFoundException with List
     "AWS::DevOpsGuru::ResourceCollection",  # Can throw failure because No CustomerResourceFilter present
     "AWS::EC2::CarrierGateway",  # not available in every region
     "AWS::ECS::TaskSet",  # requires Cluster, Service, Id instead of only Cluster, Service, like the CLI
     "AWS::EFS::MountTarget",  # fileSystemId or a mountTargetId
+    "AWS::FMS::ResourceSet",  # Account needs to be delegated by AWS FM
     "AWS::FMS::NotificationChannel",  # Account needs to be delegated by AWS FM
     "AWS::FMS::Policy",  # Account needs to be delegated by AWS FM
     "AWS::Glue::SchemaVersion",  # Needs inputs
@@ -73,7 +66,8 @@ EXCLUDES = (
     "AWS::Macie::FindingsFilter",  # Fails when not enabled in region
     "AWS::Organizations::Account",  # AccessDeniedException when not management account
     "AWS::Organizations::OrganizationalUnit",  # AccessDeniedException when not management account
-    "AWS::Organizations::Policy",  # not management account
+    "AWS::Organizations::Policy",  # not in management account
+    "AWS::Organizations::ResourcePolicy",  # not in management account
     "AWS::RoboMaker::Fleet",  # support for the AWS RoboMaker application deployment feature has ended
     "AWS::RoboMaker::Robot",  # support for the AWS RoboMaker application deployment feature has ended
     "AWS::S3::MultiRegionAccessPointPolicy",  # InternalFailure,
@@ -82,17 +76,24 @@ EXCLUDES = (
     "AWS::ServiceCatalog::ServiceActionAssociation",  # InternalFailure
     "AWS::SSMContacts::Contact",  # NotFound
     "AWS::SSMContacts::ContactChannel",  # NotFound
+    "AWS::SSMContacts::Rotation",  # Account not found
     "AWS::SSO::Assignment",  # Required property: [InstanceArn, PermissionSetArn, PrincipalId, PrincipalType, TargetId, TargetType]
     "AWS::SSO::InstanceAccessControlAttributeConfiguration",  # Required property: [InstanceArn] and not type for SSOInstance
     "AWS::SSO::PermissionSet",  # Required property: [InstanceArn, PermissionSetArn]
+    "AWS::XRay::Group",  # InternalFailure
 )
 
 EXCLUDES_GET = {
     "AWS::Athena::DataCatalog",  # ResourceNotFoundException - same problem with cli
+    "AWS::CodePipeline::CustomActionType",  # ResourceNotFoundException on default resources
     "AWS::EC2::PrefixList",  # InternalFailure on GetResource
     "AWS::ECS::CapacityProvider",  # InternalFailure on GetResource
     "AWS::Route53Resolver::ResolverRule",  # InvalidRequestException - Cannot tag Auto Defined Rule.
     "AWS::CloudFormation::PublicTypeVersion",  # GeneralServiceException - Account is not registered as a publisher
+    "AWS::RAM::Permission",  # Cannot deserialize in handler
+    # There are a lot of these, and it is easy to run into downstream throttling.
+    # We probably should improve the tool to do things more spread between resources.
+    "AWS::SSM::Document",
 }
 
 DEPENDENCIES = {  # Our implementation only supports one parent_resource as dependency
@@ -103,9 +104,28 @@ DEPENDENCIES = {  # Our implementation only supports one parent_resource as depe
     "AWS::AmplifyUIBuilder::Theme": Dependency(parent="AWS::Amplify::App", mapping={"AppId": "AppId"}),
     "AWS::AmplifyUIBuilder::Form": Dependency(parent="AWS::Amplify::App", mapping={"AppId": "AppId"}),
     # ApiGateway
+    "AWS::ApiGateway::Authorizer": Dependency(parent="AWS::ApiGateway::RestApi", mapping={"RestApiId": "RestApiId"}),
+    "AWS::ApiGateway::BasePathMapping": Dependency(
+        parent="AWS::ApiGateway::DomainName", mapping={"DomainName": "DomainName"}
+    ),
+    "AWS::ApiGateway::Deployment": Dependency(parent="AWS::ApiGateway::RestApi", mapping={"RestApiId": "RestApiId"}),
+    "AWS::ApiGateway::DocumentationPart": Dependency(
+        parent="AWS::ApiGateway::RestApi", mapping={"RestApiId": "RestApiId"}
+    ),
+    "AWS::ApiGateway::DocumentationVersion": Dependency(
+        parent="AWS::ApiGateway::RestApi", mapping={"RestApiId": "RestApiId"}
+    ),
+    "AWS::ApiGateway::Model": Dependency(parent="AWS::ApiGateway::RestApi", mapping={"RestApiId": "RestApiId"}),
+    "AWS::ApiGateway::RequestValidator": Dependency(
+        parent="AWS::ApiGateway::RestApi", mapping={"RestApiId": "RestApiId"}
+    ),
+    "AWS::ApiGateway::Resource": Dependency(parent="AWS::ApiGateway::RestApi", mapping={"RestApiId": "RestApiId"}),
+    "AWS::ApiGateway::Stage": Dependency(parent="AWS::ApiGateway::RestApi", mapping={"RestApiId": "RestApiId"}),
+    "AWS::ApiGateway::UsagePlanKey": Dependency(parent="AWS::ApiGateway::UsagePlan", mapping={"UsagePlanId": "Id"}),
     "AWS::ApiGatewayV2::Authorizer": Dependency(parent="AWS::ApiGatewayV2::Api", mapping={"ApiId": "ApiId"}),
     "AWS::ApiGatewayV2::Deployment": Dependency(parent="AWS::ApiGatewayV2::Api", mapping={"ApiId": "ApiId"}),
     "AWS::ApiGatewayV2::Model": Dependency(parent="AWS::ApiGatewayV2::Api", mapping={"ApiId": "ApiId"}),
+    "AWS::ApiGatewayV2::Route": Dependency(parent="AWS::ApiGatewayV2::Api", mapping={"ApiId": "ApiId"}),
     # APS
     "AWS::APS::RuleGroupsNamespace": Dependency(parent="AWS::APS::Workspace", mapping={"Workspace": "WorkspaceId"}),
     # Athena
@@ -193,7 +213,8 @@ DEPENDENCIES = {  # Our implementation only supports one parent_resource as depe
     "AWS::Lex::BotVersion": Dependency(parent="AWS::Lex::Bot", mapping={"BotId": "Id"}),
     # Lightsail
     "AWS::Lightsail::LoadBalancerTlsCertificate": Dependency(
-        parent="AWS::Lightsail::LoadBalancerTlsCertificate", mapping={"LoadBalancerName": "LoadBalancerName"}
+        parent="AWS::Lightsail::LoadBalancerTlsCertificate",
+        mapping={"LoadBalancerName": "LoadBalancerName"},
     ),
     # Location
     "AWS::Location::TrackerConsumer": Dependency(
@@ -260,6 +281,9 @@ DEPENDENCIES = {  # Our implementation only supports one parent_resource as depe
     "AWS::QuickSight::DataSource": DynamicDependency(
         function=list_quicksight_accounts, mapping={"AwsAccountId": "Account"}
     ),
+    "AWS::QuickSight::RefreshSchedule": DynamicDependency(
+        function=list_quicksight_accounts, mapping={"AwsAccountId": "Account"}
+    ),
     "AWS::QuickSight::Template": DynamicDependency(
         function=list_quicksight_accounts, mapping={"AwsAccountId": "Account"}
     ),
@@ -268,13 +292,16 @@ DEPENDENCIES = {  # Our implementation only supports one parent_resource as depe
     "AWS::RDS::DBProxyTargetGroup": Dependency(parent="AWS::RDS::DBProxy", mapping={"DBProxyName": "DBProxyName"}),
     # RefactorSpaces
     "AWS::RefactorSpaces::Application": Dependency(
-        parent="AWS::RefactorSpaces::Environment", mapping={"EnvironmentIdentifier": "EnvironmentIdentifier"}
+        parent="AWS::RefactorSpaces::Environment",
+        mapping={"EnvironmentIdentifier": "EnvironmentIdentifier"},
     ),
     "AWS::RefactorSpaces::Route": Dependency(
-        parent="AWS::RefactorSpaces::Application", mapping={"ApplicationIdentifier": "ApplicationIdentifier"}
+        parent="AWS::RefactorSpaces::Application",
+        mapping={"ApplicationIdentifier": "ApplicationIdentifier"},
     ),
     "AWS::RefactorSpaces::Service": Dependency(
-        parent="AWS::RefactorSpaces::Application", mapping={"ApplicationIdentifier": "ApplicationIdentifier"}
+        parent="AWS::RefactorSpaces::Application",
+        mapping={"ApplicationIdentifier": "ApplicationIdentifier"},
     ),
     # S3Outpost
     "AWS::S3Outposts::AccessPoint": Dependency(parent="AWS::S3Outposts::Bucket", mapping={"Bucket": "Arn"}),
@@ -283,6 +310,18 @@ DEPENDENCIES = {  # Our implementation only supports one parent_resource as depe
     # Signer
     "AWS::Signer::ProfilePermission": Dependency(
         parent="AWS::Signer::SigningProfile", mapping={"ProfileName": "ProfileName"}
+    ),
+    # VPC Latice
+    "AWS::VpcLattice::AccessLogSubscription": Dependency(
+        parent="AWS::VpcLattice::Service", mapping={"ResourceIdentifier": "Id"}
+    ),
+    "AWS::VpcLattice::Listener": Dependency(parent="AWS::VpcLattice::Service", mapping={"ServiceIdentifier": "Id"}),
+    "AWS::VpcLattice::Rule": Dependency(parent="AWS::VpcLattice::Listener", mapping={"listenerIdentifier": "Id"}),
+    "AWS::VpcLattice::ServiceNetworkServiceAssociation": Dependency(
+        parent="AWS::VpcLattice::Service", mapping={"ServiceIdentifier": "Id"}
+    ),
+    "AWS::VpcLattice::ServiceNetworkVpcAssociation": Dependency(
+        parent="AWS::VpcLattice::ServiceNetwork", mapping={"ServiceNetworkIdentifier": "Id"}
     ),
     # WAF
     "AWS::WAFv2::IPSet": DynamicDependency(function=list_wafv2_scopes, mapping={"Scope": "Scope"}),
