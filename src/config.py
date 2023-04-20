@@ -146,6 +146,7 @@ DEPENDENCIES = {  # Our implementation only supports one parent_resource as depe
     ),
     # EC2
     "AWS::EC2::IPAMAllocation": Dependency(parent="AWS::EC2::IPAMPool", mapping={"IpamPoolId": "IpamPoolId"}),
+    "AWS::EC2::IPAMPoolCidr": Dependency(parent="AWS::EC2::IPAMPool", mapping={"IpamPoolId": "IpamPoolId"}),
     "AWS::EC2::TransitGatewayMulticastDomainAssociation": Dependency(
         parent="AWS::EC2::TransitGatewayMulticastDomain",
         mapping={"TransitGatewayMulticastDomainId": "TransitGatewayMulticastDomainId"},
