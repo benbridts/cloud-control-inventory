@@ -18,20 +18,20 @@
     "default": {
         "boto3": {
             "hashes": [
-                "sha256:9c67729a6112b7dced521ea70b0369fba138e89852b029a7876041cd1460c084",
-                "sha256:af32b7f61dd6293cad728ec205bcb3611ab1bf7b7dbccfd0f2bd7b9c9af96039"
+                "sha256:d03f82363314759eff7f84a27b9e6428125f89d8119e4588e8c2c1d79892c956",
+                "sha256:d9d6ce11df309707b490d2f5f785b761cfddfd6d1f665385b78c9d8ed097184b"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==1.42.0"
+            "version": "==1.42.39"
         },
         "botocore": {
             "hashes": [
-                "sha256:08fe47e9b306f4436f5eaf6a02cb6d55c7745d13d2d093ce5d917d3ef3d3df75",
-                "sha256:963cc946e885acb941c96e7d343cb6507b479812ca22566ceb3e9410d0588de0"
+                "sha256:0f00355050821e91a5fe6d932f7bf220f337249b752899e3e4cf6ed54326249e",
+                "sha256:9e0d0fed9226449cc26fcf2bbffc0392ac698dd8378e8395ce54f3ec13f81d58"
             ],
             "markers": "python_version >= '3.9'",
-            "version": "==1.41.6"
+            "version": "==1.42.39"
         },
         "contourpy": {
             "hashes": [
