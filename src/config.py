@@ -1,3 +1,6 @@
+import json
+import pathlib
+
 from dependency_utils import (
     ResourceDependency as Dependency,
     DynamicDependency,
@@ -8,6 +11,22 @@ from dependency_utils import (
     is_audit_manager_enabled,
     is_cloudformation_publisher,
 )
+
+
+def _load_schema_dependencies() -> dict:
+    """Load schema dependencies from the generated JSON file and convert to ResourceDependency objects."""
+    schema_file = pathlib.Path(__file__).parent / "schema_dependencies.json"
+    if not schema_file.exists():
+        return {}
+    with open(schema_file) as f:
+        data = json.load(f)
+    return {
+        type_name: Dependency(parent=entry["parent"], mapping=entry["mapping"])
+        for type_name, entry in data.items()
+    }
+
+
+SCHEMA_DEPENDENCIES = _load_schema_dependencies()
 
 EXCLUDES = (
     # Error in the provider
@@ -96,7 +115,7 @@ EXCLUDES_GET = {
     "AWS::SSM::Document",
 }
 
-DEPENDENCIES = {  # Our implementation only supports one parent_resource as dependency
+EXTRA_DEPENDENCIES = {  # Manual dependencies that cannot be auto-derived from schemas
     # Amplify
     "AWS::Amplify::Branch": Dependency(parent="AWS::Amplify::App", mapping={"AppId": "AppId"}),
     "AWS::Amplify::Domain": Dependency(parent="AWS::Amplify::App", mapping={"AppId": "AppId"}),
@@ -330,3 +349,7 @@ DEPENDENCIES = {  # Our implementation only supports one parent_resource as depe
     "AWS::WAFv2::RuleGroup": DynamicDependency(function=list_wafv2_scopes, mapping={"Scope": "Scope"}),
     "AWS::WAFv2::WebACL": DynamicDependency(function=list_wafv2_scopes, mapping={"Scope": "Scope"}),
 }
+
+# Combine auto-generated schema dependencies with manual extra dependencies.
+# EXTRA_DEPENDENCIES takes precedence over SCHEMA_DEPENDENCIES for the same key.
+DEPENDENCIES = {**SCHEMA_DEPENDENCIES, **EXTRA_DEPENDENCIES}
