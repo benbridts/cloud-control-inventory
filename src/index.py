@@ -174,9 +174,9 @@ def __get_resources(resource_type, known_resources) -> Optional[List]:
 
 
 if __name__ == "__main__":
-    start = datetime.datetime.utcnow()
+    start = datetime.datetime.now()
     print(start.isoformat(" "))
     main(starts_with="AWS::")
-    stop = datetime.datetime.utcnow()
+    stop = datetime.datetime.now()
     print(stop.isoformat(" "))
     print(stop - start)
