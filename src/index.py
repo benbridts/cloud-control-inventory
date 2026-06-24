@@ -95,7 +95,7 @@ def list_resources_for_type(resource_type: str, resource_model: Optional[Mapping
 def write_resources_to_file(resource_type: str, resources: list, metadata: Optional[Mapping] = None):
     if metadata is None:
         metadata = {}
-    folder = pathlib.Path("../output")
+    folder = pathlib.Path(__file__).resolve().parent.parent / "output"
     folder.mkdir(exist_ok=True)
     file = folder / f"{resource_type.replace('::', '-').lower()}.json"
     if not resources and file.exists():
